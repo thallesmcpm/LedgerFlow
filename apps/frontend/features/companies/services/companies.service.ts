@@ -73,6 +73,11 @@ function buildQueryString(params?: CompanyListParams): string {
       search.set(key, value);
     }
   }
+  // Só vai na URL quando ligado: `irregular=false` seria ruído, e o backend
+  // trata a ausência como "não filtrar".
+  if (params.irregular) {
+    search.set('irregular', 'true');
+  }
   const query = search.toString();
   return query ? `?${query}` : '';
 }

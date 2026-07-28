@@ -87,4 +87,9 @@ export interface CompanyFilters {
   readonly porte?: string;
   readonly situacao?: string;
   readonly cnae?: string;
+  /**
+   * «Tudo que não é ATIVA». Separado de `situacao` porque é uma negação: a
+   * comparação exata não daria conta sem listar todos os valores irregulares.
+   */
+  readonly irregular?: boolean;
 }

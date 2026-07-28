@@ -36,6 +36,14 @@ export const listCompaniesQuerySchema = z.object({
   porte: z.string().optional(),
   situacao: z.string().optional(),
   cnae: z.string().optional(),
+  /**
+   * Atalho para «tudo que não é ATIVA». Existe porque `situacao` compara por
+   * igualdade, e irregular é uma negação — ver `company-filters.ts`.
+   */
+  irregular: z
+    .enum(['true', 'false'])
+    .optional()
+    .transform((value) => value === 'true'),
 });
 export type ListCompaniesQuery = z.infer<typeof listCompaniesQuerySchema>;
 
