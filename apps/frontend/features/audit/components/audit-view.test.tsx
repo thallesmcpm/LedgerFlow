@@ -30,6 +30,8 @@ vi.mock('@/features/audit/hooks/use-audit', () => ({
       ],
     },
   }),
+  // Nada salvo: este teste cobre o resultado recém-executado.
+  useLatestAudit: () => ({ data: null, isLoading: false }),
   useAuditDetail: () => ({ data: undefined, isLoading: false }),
 }));
 

@@ -11,7 +11,11 @@ import { StatCard } from '@/components/ui/stat-card';
 import { EmptyState } from '@/components/ui/empty-state';
 import { cn } from '@/lib/cn';
 import { FindingBadge } from '@/features/audit/components/finding-badge';
-import { useRunPortfolioAudit, useAuditDetail } from '@/features/audit/hooks/use-audit';
+import {
+  useRunPortfolioAudit,
+  useAuditDetail,
+  useLatestAudit,
+} from '@/features/audit/hooks/use-audit';
 import type { AuditStatus } from '@/features/audit/types/audit.types';
 
 const STATUS_LABELS: Record<AuditStatus, string> = {
@@ -28,8 +32,16 @@ const STATUS_VARIANTS: Record<AuditStatus, 'success' | 'warning' | 'destructive'
 
 export function AuditView(): React.ReactNode {
   const [selectedRunId, setSelectedRunId] = useState<string | null>(null);
-  const { mutate, data, isPending, isError } = useRunPortfolioAudit();
+  const { mutate, data: recemExecutada, isPending, isError } = useRunPortfolioAudit();
+  const ultima = useLatestAudit();
   const detail = useAuditDetail(selectedRunId);
+
+  /**
+   * A execução desta sessão tem precedência sobre a salva: enquanto a
+   * invalidação não chega, `ultima` ainda carrega o resultado anterior, e
+   * mostrá-lo depois do clique pareceria que a auditoria não rodou.
+   */
+  const data = recemExecutada ?? ultima.data ?? undefined;
 
   function handleRunAudit(): void {
     setSelectedRunId(null);
@@ -56,7 +68,11 @@ export function AuditView(): React.ReactNode {
         />
       ) : null}
 
-      {!data && !isError ? (
+      {/*
+        Só depois de consultar: enquanto `ultima` carrega, anunciar "nenhuma
+        auditoria" seria mentira que pisca na tela a cada abertura.
+      */}
+      {!data && !isError && !ultima.isLoading ? (
         <EmptyState
           icon={ShieldCheck}
           title="Nenhuma auditoria executada ainda"

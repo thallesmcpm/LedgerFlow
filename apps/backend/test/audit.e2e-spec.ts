@@ -161,6 +161,74 @@ describe('Audit (e2e)', () => {
     });
   });
 
+  describe('GET /api/audit/latest', () => {
+    it('devolve null quando o escritório nunca auditou', async () => {
+      const response = await http().get('/api/audit/latest').expect(200);
+
+      expect(response.body.data).toBeNull();
+    });
+
+    it('devolve a execução mais recente de cada empresa, não todas', async () => {
+      const company = await ctx.prisma.company.create({
+        data: companyFactory(TENANT_A, { cnpj: '66666666000166' }),
+      });
+      await http().post(`/api/audit/companies/${company.id}`).expect(201);
+      await http().post(`/api/audit/companies/${company.id}`).expect(201);
+
+      const response = await http().get('/api/audit/latest').expect(200);
+
+      expect(response.body.data.total).toBe(1);
+      expect(response.body.data.runs).toHaveLength(1);
+    });
+
+    it('lista as críticas antes das saudáveis', async () => {
+      const boa = await ctx.prisma.company.create({
+        data: {
+          ...companyFactory(TENANT_A, {
+            cnpj: '11222333000181',
+            name: 'Empresa Regular',
+          }),
+          situacaoCadastral: 'ATIVA',
+          cnaeCodigo: '4721102',
+          porte: 'ME',
+        },
+      });
+      // CNPJ com dígito verificador inválido: falha crítica garantida.
+      const ruim = await ctx.prisma.company.create({
+        data: companyFactory(TENANT_A, {
+          cnpj: '32165498000177',
+          name: 'Empresa Com Problema',
+        }),
+      });
+      await http().post(`/api/audit/companies/${boa.id}`).expect(201);
+      await http().post(`/api/audit/companies/${ruim.id}`).expect(201);
+
+      const response = await http().get('/api/audit/latest').expect(200);
+
+      expect(response.body.data.runs[0].companyName).toBe(
+        'Empresa Com Problema',
+      );
+    });
+
+    it('não enxerga auditorias de outro tenant', async () => {
+      const outra = await ctx.prisma.company.create({
+        data: companyFactory(TENANT_B, { cnpj: '77777777000177' }),
+      });
+      await ctx.prisma.auditRun.create({
+        data: {
+          tenantId: TENANT_B,
+          companyId: outra.id,
+          score: 10,
+          status: 'critical',
+        },
+      });
+
+      const response = await http().get('/api/audit/latest').expect(200);
+
+      expect(response.body.data).toBeNull();
+    });
+  });
+
   describe('POST /api/audit/run', () => {
     it('audita a carteira inteira e resume por status', async () => {
       brasilApiMock.respondWith = {

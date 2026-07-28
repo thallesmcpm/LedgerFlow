@@ -43,6 +43,15 @@ export class AuditController {
     return this.audit.runForPortfolio(tenantId, user.userId);
   }
 
+  /**
+   * Rota literal ANTES de `:id` — na ordem inversa, `@Get(':id')` capturaria
+   * "latest" e a busca terminaria em 404.
+   */
+  @Get('latest')
+  latest(@TenantId() tenantId: string): Promise<PortfolioAuditDto | null> {
+    return this.audit.getLatestPortfolio(tenantId);
+  }
+
   @Get(':id')
   getById(
     @TenantId() tenantId: string,

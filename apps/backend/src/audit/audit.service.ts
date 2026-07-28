@@ -5,6 +5,7 @@ import { BrasilApiService } from '../brasil-api/brasil-api.service';
 import { paginated, type Paginated } from '../common/pagination';
 import { mapWithConcurrency } from '../common/concurrency';
 import { runAudit, normalizeName, type AuditContext } from './audit-engine';
+import { orderBySeverity } from './audit-ordering';
 import {
   toDetailDto,
   toSummaryDto,
@@ -16,6 +17,23 @@ import {
 
 /** Concorrência máxima ao persistir auditorias da carteira (spec §2.1). */
 const AUDIT_CONCURRENCY = 5;
+
+/**
+ * Resumo da carteira auditada. Usado tanto pela execução nova quanto pela
+ * leitura da última, para as duas saírem contadas e ordenadas igual — se
+ * divergissem, recarregar a página mudaria a tela sem nada ter mudado.
+ */
+function toPortfolioDto(
+  runs: readonly AuditRunSummaryDto[],
+): PortfolioAuditDto {
+  return {
+    total: runs.length,
+    healthy: runs.filter((r) => r.status === 'healthy').length,
+    attention: runs.filter((r) => r.status === 'attention').length,
+    critical: runs.filter((r) => r.status === 'critical').length,
+    runs: orderBySeverity(runs),
+  };
+}
 
 @Injectable()
 export class AuditService {
@@ -84,13 +102,39 @@ export class AuditService {
       metadata: { total: runs.length },
     });
 
-    return {
-      total: runs.length,
-      healthy: runs.filter((r) => r.status === 'healthy').length,
-      attention: runs.filter((r) => r.status === 'attention').length,
-      critical: runs.filter((r) => r.status === 'critical').length,
-      runs,
-    };
+    return toPortfolioDto(runs);
+  }
+
+  /**
+   * Última auditoria de cada empresa da carteira, para a tela abrir com o
+   * resultado anterior em vez de vazia.
+   *
+   * As execuções sempre ficaram gravadas; o que faltava era lê-las. Sem isto,
+   * recarregar a página apagava da vista um trabalho que pode ter levado
+   * minutos e várias consultas à BrasilAPI.
+   *
+   * Devolve `null` quando o escritório nunca auditou — o que a tela distingue
+   * de "auditou e está tudo certo".
+   */
+  async getLatestPortfolio(tenantId: string): Promise<PortfolioAuditDto | null> {
+    const rows = await this.prisma.auditRun.findMany({
+      where: { tenantId },
+      // `distinct` + este `orderBy` devolve a execução mais recente de cada
+      // empresa: o Postgres resolve como DISTINCT ON. A ordem final de leitura
+      // é aplicada depois, por gravidade.
+      distinct: ['companyId'],
+      orderBy: [{ companyId: 'asc' }, { createdAt: 'desc' }],
+      include: {
+        _count: { select: { findings: true } },
+        company: { select: { name: true } },
+      },
+    });
+
+    if (rows.length === 0) {
+      return null;
+    }
+
+    return toPortfolioDto(rows.map(toSummaryDto));
   }
 
   async runForCompany(
