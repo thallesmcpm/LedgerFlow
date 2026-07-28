@@ -1,7 +1,13 @@
 import { config } from '@/services/config';
 import { httpClient } from '@/lib/http-client';
 import { MOCK_COMPANIES } from '@/services/mocks/companies.mock';
-import type { CnpjLookup, Company, CompanyFilters, CreateCompanyInput } from '@/features/companies/types/company.types';
+import type {
+  CnpjLookup,
+  Company,
+  CompanyFilters,
+  CreateCompanyInput,
+  UpdateCompanyInput,
+} from '@/features/companies/types/company.types';
 import type { PaginatedResponse, ApiResponse } from '@/types/api.types';
 import type { QueryParams } from '@/types/common.types';
 
@@ -172,6 +178,21 @@ export const companiesService = {
       };
     }
     const response = await httpClient.post<ApiResponse<Company>>('/companies', input);
+    return response.data;
+  },
+
+  async update(companyId: string, input: UpdateCompanyInput): Promise<Company> {
+    if (config.useMocks) {
+      const company = MOCK_COMPANIES.find((item) => item.id === companyId);
+      if (!company) {
+        throw new Error(`Empresa não encontrada: ${companyId}`);
+      }
+      return { ...company, ...input };
+    }
+    const response = await httpClient.patch<ApiResponse<Company>>(
+      `/companies/${companyId}`,
+      input,
+    );
     return response.data;
   },
 

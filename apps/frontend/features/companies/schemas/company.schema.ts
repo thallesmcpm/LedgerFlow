@@ -48,4 +48,10 @@ export const createCompanySchema = companySchema.omit({
   dataAbertura: true,
 });
 
+/**
+ * Edição: os mesmos campos do cadastro, menos o CNPJ — ver `UpdateCompanyInput`
+ * em `types/company.types.ts` para o porquê.
+ */
+export const updateCompanySchema = createCompanySchema.omit({ cnpj: true });
+
 export const companyListSchema = z.array(companySchema);

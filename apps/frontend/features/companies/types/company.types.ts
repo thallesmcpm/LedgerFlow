@@ -47,6 +47,18 @@ export type CreateCompanyInput = Omit<
   | 'dataAbertura'
 >;
 
+/**
+ * Campos que a tela de edição envia em `PATCH /companies/:id`.
+ *
+ * O CNPJ fica de fora de propósito: ele identifica a empresa, alimenta a
+ * auditoria e a consulta à Receita. Corrigir um CNPJ errado é apagar e
+ * recadastrar — assim ninguém troca o identificador por engano.
+ *
+ * Os campos vindos da Receita (situação, CNAE, porte) também ficam fora: quem
+ * manda neles é a BrasilAPI, não o usuário.
+ */
+export type UpdateCompanyInput = Omit<CreateCompanyInput, 'cnpj'>;
+
 /** Resposta de GET /companies/lookup/:cnpj — dados oficiais antes de salvar. */
 export interface CnpjLookup {
   readonly cnpj: string;
