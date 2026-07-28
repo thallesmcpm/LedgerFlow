@@ -87,6 +87,20 @@ describe('Audit (e2e)', () => {
       });
     });
 
+    it('traz o nome da empresa, não só o id, para a tela não exibir o cuid', async () => {
+      const company = await ctx.prisma.company.create({
+        data: companyFactory(TENANT_A, {
+          cnpj: '55555555000155',
+          name: 'Padaria Central LTDA',
+        }),
+      });
+      await http().post(`/api/audit/companies/${company.id}`).expect(201);
+
+      const response = await http().get('/api/audit').expect(200);
+
+      expect(response.body.data[0].companyName).toBe('Padaria Central LTDA');
+    });
+
     it('never lists audit runs from another tenant', async () => {
       const other = await ctx.prisma.company.create({
         data: companyFactory(TENANT_B, { cnpj: '44444444000144' }),

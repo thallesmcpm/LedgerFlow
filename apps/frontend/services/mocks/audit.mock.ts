@@ -13,6 +13,7 @@ export const MOCK_AUDIT_RUNS: readonly AuditRunDetail[] = [
   {
     id: 'run_cmp_001',
     companyId: 'cmp_001',
+    companyName: 'PETROLEO BRASILEIRO S A PETROBRAS',
     score: 100,
     status: 'healthy',
     findingsCount: 6,
@@ -29,6 +30,7 @@ export const MOCK_AUDIT_RUNS: readonly AuditRunDetail[] = [
   {
     id: 'run_cmp_002',
     companyId: 'cmp_002',
+    companyName: 'MAGAZINE LUIZA S/A',
     score: 85,
     status: 'attention',
     findingsCount: 6,
@@ -51,6 +53,7 @@ export const MOCK_AUDIT_RUNS: readonly AuditRunDetail[] = [
   {
     id: 'run_cmp_003',
     companyId: 'cmp_003',
+    companyName: 'BANCO DO BRASIL SA',
     score: 40,
     status: 'critical',
     findingsCount: 6,
@@ -85,6 +88,7 @@ export const MOCK_AUDIT_RUNS: readonly AuditRunDetail[] = [
   {
     id: 'run_cmp_004',
     companyId: 'cmp_004',
+    companyName: 'AMBEV S.A.',
     score: 20,
     status: 'critical',
     findingsCount: 6,
@@ -113,6 +117,7 @@ export const MOCK_AUDIT_RUNS: readonly AuditRunDetail[] = [
   {
     id: 'run_cmp_005',
     companyId: 'cmp_005',
+    companyName: 'VALE S.A.',
     score: 88,
     status: 'attention',
     findingsCount: 6,
