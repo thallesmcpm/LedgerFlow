@@ -11,6 +11,7 @@ import { ActivityService } from '../activity/activity.service';
 import { BrasilApiService } from '../brasil-api/brasil-api.service';
 import type { CnpjInfo, PartnerInfo } from '../brasil-api/brasil-api.types';
 import { paginated, type Paginated } from '../common/pagination';
+import { buildCompanyWhere } from './company-filters';
 import {
   toCompanyDto,
   type CompanyDto,
@@ -82,31 +83,9 @@ export class CompaniesService {
     tenantId: string,
     query: ListCompaniesQuery,
   ): Promise<Paginated<CompanyDto>> {
-    const { page, pageSize, search } = query;
+    const { page, pageSize } = query;
 
-    const where: Prisma.CompanyWhereInput = { tenantId };
-    if (search) {
-      // `insensitive` é obrigatório no Postgres: sem ele, procurar por
-      // "petrobras" não encontra "PETROBRAS". O SQLite anterior ignorava
-      // maiúsculas por conta própria e escondia essa necessidade.
-      where.OR = [
-        { name: { contains: search, mode: 'insensitive' } },
-        { tradeName: { contains: search, mode: 'insensitive' } },
-        { cnpj: { contains: search } },
-      ];
-    }
-    if (query.state) {
-      where.state = query.state;
-    }
-    if (query.porte) {
-      where.porte = query.porte;
-    }
-    if (query.situacao) {
-      where.situacaoCadastral = query.situacao;
-    }
-    if (query.cnae) {
-      where.cnaeCodigo = query.cnae;
-    }
+    const where = buildCompanyWhere(tenantId, query);
 
     // Leituras paralelas (sem $transaction): evita lock de escrita do SQLite
     // sob concorrência — melhora drasticamente a cauda de latência (p99).

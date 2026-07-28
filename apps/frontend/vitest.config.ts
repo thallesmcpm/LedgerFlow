@@ -10,6 +10,16 @@ export default defineConfig({
     setupFiles: ['./vitest.setup.ts'],
     include: ['**/*.test.{ts,tsx}'],
     exclude: ['node_modules', '.next'],
+    /**
+     * `lib/env.ts` valida as variáveis na importação e lança se faltarem. Um
+     * teste de componente que alcance a camada de serviço — mesmo sem chamar
+     * a API — quebra na importação sem isto. O endereço é fictício de
+     * propósito: nenhum teste deve sair para a rede.
+     */
+    env: {
+      NEXT_PUBLIC_API_URL: 'http://localhost:0/api',
+      NEXT_PUBLIC_USE_MOCKS: 'false',
+    },
   },
   resolve: {
     alias: {
