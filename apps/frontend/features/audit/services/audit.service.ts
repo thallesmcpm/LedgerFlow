@@ -15,6 +15,18 @@ export const auditService = {
     return response.data;
   },
 
+  /** Última auditoria de cada empresa. `null` quando nunca se auditou. */
+  async getLatest(signal?: AbortSignal): Promise<PortfolioAudit | null> {
+    if (config.useMocks) {
+      return MOCK_PORTFOLIO_AUDIT;
+    }
+    const response = await httpClient.get<ApiResponse<PortfolioAudit | null>>(
+      '/audit/latest',
+      { signal },
+    );
+    return response.data;
+  },
+
   async getById(id: string, signal?: AbortSignal): Promise<AuditRunDetail> {
     if (config.useMocks) {
       const run = MOCK_AUDIT_RUNS.find((item) => item.id === id);
