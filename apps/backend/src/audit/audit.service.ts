@@ -151,7 +151,10 @@ export class AuditService {
         orderBy: { createdAt: 'desc' },
         skip: (page - 1) * pageSize,
         take: pageSize,
-        include: { _count: { select: { findings: true } } },
+        include: {
+          _count: { select: { findings: true } },
+          company: { select: { name: true } },
+        },
       }),
     ]);
 
@@ -161,7 +164,7 @@ export class AuditService {
   async getById(tenantId: string, id: string): Promise<AuditRunDetailDto> {
     const run = await this.prisma.auditRun.findFirst({
       where: { id, tenantId },
-      include: { findings: true },
+      include: { findings: true, company: { select: { name: true } } },
     });
     if (!run) {
       throw new NotFoundException('Auditoria não encontrada');
@@ -191,7 +194,10 @@ export class AuditService {
           })),
         },
       },
-      include: { _count: { select: { findings: true } } },
+      include: {
+        _count: { select: { findings: true } },
+        company: { select: { name: true } },
+      },
     });
 
     await this.prisma.company.update({

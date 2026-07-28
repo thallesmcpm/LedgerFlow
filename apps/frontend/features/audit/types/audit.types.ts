@@ -12,6 +12,8 @@ export interface AuditFinding {
 export interface AuditRunSummary {
   readonly id: string;
   readonly companyId: string;
+  /** Espelha o DTO do backend: o id é cuid, ilegível para quem lê o relatório. */
+  readonly companyName: string;
   readonly score: number;
   readonly status: AuditStatus;
   readonly findingsCount: number;

@@ -19,6 +19,11 @@ export interface AuditFindingDto {
 export interface AuditRunSummaryDto {
   readonly id: string;
   readonly companyId: string;
+  /**
+   * O `companyId` é um cuid, ilegível para quem lê o relatório. O nome vem
+   * junto para a tela não precisar de uma segunda chamada por linha.
+   */
+  readonly companyName: string;
   readonly score: number;
   readonly status: AuditStatus;
   readonly findingsCount: number;
@@ -38,12 +43,16 @@ export interface PortfolioAuditDto {
   readonly runs: readonly AuditRunSummaryDto[];
 }
 
+/** A relação `company` é obrigatória no tipo para o `include` não ser esquecido. */
+type WithCompany = { company: { name: string } };
+
 export function toSummaryDto(
-  run: AuditRun & { _count: { findings: number } },
+  run: AuditRun & WithCompany & { _count: { findings: number } },
 ): AuditRunSummaryDto {
   return {
     id: run.id,
     companyId: run.companyId,
+    companyName: run.company.name,
     score: run.score,
     status: run.status as AuditStatus,
     findingsCount: run._count.findings,
@@ -52,11 +61,12 @@ export function toSummaryDto(
 }
 
 export function toDetailDto(
-  run: AuditRun & { findings: AuditFinding[] },
+  run: AuditRun & WithCompany & { findings: AuditFinding[] },
 ): AuditRunDetailDto {
   return {
     id: run.id,
     companyId: run.companyId,
+    companyName: run.company.name,
     score: run.score,
     status: run.status as AuditStatus,
     findingsCount: run.findings.length,

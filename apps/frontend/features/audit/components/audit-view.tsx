@@ -90,7 +90,7 @@ export function AuditView(): React.ReactNode {
                     )}
                   >
                     <div className="min-w-0 space-y-1">
-                      <p className="truncate text-sm font-medium">{run.companyId}</p>
+                      <p className="truncate text-sm font-medium">{run.companyName}</p>
                       <Badge variant={STATUS_VARIANTS[run.status]}>{STATUS_LABELS[run.status]}</Badge>
                     </div>
                     <span className="shrink-0 text-sm font-semibold">{run.score}/100</span>
